@@ -1,5 +1,5 @@
 {
-    "name": "zmon/laravel-crud-generator-zmon",
+    "name": "zmon/laravel-crud-generator-pgsql",
     "description": "php artisan command to generate fully working crud with grid paginated server side only by having database tables",
     "license": "MIT",
     "authors": [
