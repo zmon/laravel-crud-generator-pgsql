@@ -1,0 +1,30 @@
+
+### Determine new tag name and set it
+```
+git tag -l
+git tag 1.4.3.0
+```
+
+### Push changes up
+
+```
+git push origin
+git push --tags
+```
+
+### Install or Update projects
+
+```
+composer require --dev zmon/laravel-crud-generator-zmon
+```
+
+Then add to service provider
+
+```
+config/app.php
+         Illuminate\Translation\TranslationServiceProvider::class,
+         Illuminate\Validation\ValidationServiceProvider::class,
+         Illuminate\View\ViewServiceProvider::class,
+-        CrudGenerator\CrudGeneratorServiceProvider::class,
+```
+
