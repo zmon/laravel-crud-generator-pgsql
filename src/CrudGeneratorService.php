@@ -51,11 +51,11 @@ class CrudGeneratorService
 
         $options = [
             'display_name_singular' => $this->displayName,
-            'display_name_plural' => str_plural($this->displayName),
+            'display_name_plural' => Str::plural($this->displayName),
             'model_uc' => $modelname,
-            'model_uc_plural' => str_plural($modelname),
+            'model_uc_plural' => Str::plural($modelname),
             'model_singular' => $model_singular,
-            'model_plural' => strtolower(str_plural($modelname)),
+            'model_plural' => strtolower(Str::plural($modelname)),
             'tablename' => $this->tableName,
             'prefix' => $this->prefix,
             'custom_master' => $this->layout ?: 'crudgenerator::layouts.master',
@@ -63,7 +63,7 @@ class CrudGeneratorService
             'view_folder' => $this->viewFolderName,
             'route_path' => $this->viewFolderName,
             'appns' => $this->appNamespace,
-            'display_uc_plural' => str_plural($modelname),
+            'display_uc_plural' => Str::plural($modelname),
             'display_singular' => $modelname,
 
 
@@ -332,10 +332,10 @@ class CrudGeneratorService
     }
 
     protected function getTypeFromDBType($dbtype) {
-        if(str_contains($dbtype, 'varchar')) { return 'text'; }
-        if(str_contains($dbtype, 'char')) { return 'text'; }
-        if(str_contains($dbtype, 'int') || str_contains($dbtype, 'float')) { return 'number'; }
-        if(str_contains($dbtype, 'date')) { return 'date'; }
+        if(Str::contains($dbtype, 'varchar')) { return 'text'; }
+        if(Str::contains($dbtype, 'char')) { return 'text'; }
+        if(Str::contains($dbtype, 'int') || Str::contains($dbtype, 'float')) { return 'number'; }
+        if(Str::contains($dbtype, 'date')) { return 'date'; }
         return 'unknown';
     }
 
@@ -367,9 +367,9 @@ class CrudGeneratorService
     protected function deletePreviousFiles($tablename, $existing_model) {
         $todelete = [
                 app_path().'/Http/Controllers/'.ucfirst($tablename).'Controller.php',
-                base_path().'/resources/views/'.str_plural($tablename).'/index.blade.php',
-                base_path().'/resources/views/'.str_plural($tablename).'/add.blade.php',
-                base_path().'/resources/views/'.str_plural($tablename).'/show.blade.php',
+                base_path().'/resources/views/'.Str::plural($tablename).'/index.blade.php',
+                base_path().'/resources/views/'.Str::plural($tablename).'/add.blade.php',
+                base_path().'/resources/views/'.Str::plural($tablename).'/show.blade.php',
             ];
         if(!$existing_model) {
             $todelete[] = app_path().'/'.ucfirst(str_singular($tablename)).'.php';
@@ -384,7 +384,7 @@ class CrudGeneratorService
 
     protected function appendToEndOfFile($path, $text, $remove_last_chars = 0, $dont_add_if_exist = false) {
         $content = file_get_contents($path);
-        if(!str_contains($content, $text) || !$dont_add_if_exist) {
+        if(!Str::contains($content, $text) || !$dont_add_if_exist) {
             $newcontent = substr($content, 0, strlen($content)-$remove_last_chars).$text;
             file_put_contents($path, $newcontent);
         }
