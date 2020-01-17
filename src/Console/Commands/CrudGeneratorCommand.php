@@ -2,6 +2,8 @@
 
 namespace CrudGenerator\Console\Commands;
 
+use Config;
+use CrudGenerator\CrudGeneratorService;
 use Illuminate\Container\Container;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -42,7 +44,7 @@ class CrudGeneratorCommand extends Command
     public function handle()
     {
         $modelname = strtolower($this->argument('model-name'));
-        $prefix = \Config::get('database.connections.mysql.prefix');
+        $prefix = Config::get('database.connections.mysql.prefix');
         $custom_table_name = $this->option('table-name');
         $custom_controller = $this->option('custom-controller');
         $singular = $this->option('singular');
@@ -51,21 +53,21 @@ class CrudGeneratorCommand extends Command
 
         $tocreate = [];
 
-        if($modelname == 'all') {
+        if ($modelname == 'all') {
             $pretables = json_decode(json_encode(DB::select("show tables")), true);
             $tables = [];
-            foreach($pretables as $p) {
+            foreach ($pretables as $p) {
                 list($key) = array_keys($p);
                 $tables[] = $p[$key];
             }
-            $this->info("List of tables: ".implode($tables, ","));
+            $this->info("List of tables: " . implode($tables, ","));
 
             foreach ($tables as $t) {
                 // Ignore tables with different prefix
-                if($prefix == '' || str_contains($t, $prefix)) {
+                if ($prefix == '' || str_contains($t, $prefix)) {
                     $t = strtolower(substr($t, strlen($prefix)));
-                    $toadd = ['modelname'=> str_singular($t), 'tablename'=>''];
-                    if(str_plural($toadd['modelname']) != $t) {
+                    $toadd = ['modelname' => str_singular($t), 'tablename' => ''];
+                    if (str_plural($toadd['modelname']) != $t) {
                         $toadd['tablename'] = $t;
                     }
                     $tocreate[] = $toadd;
@@ -75,17 +77,15 @@ class CrudGeneratorCommand extends Command
             $custom_table_name = null;
             $custom_controller = null;
             $singular = null;
-        }
-        else {
+        } else {
 
             $tocreate = [
                 'modelname' => $modelname,
                 'tablename' => $modelname,
             ];
-            if($singular) {
+            if ($singular) {
                 $tocreate['tablename'] = strtolower($modelname);
-            }
-            else if($custom_table_name) {
+            } else if ($custom_table_name) {
                 $tocreate['tablename'] = $custom_table_name;
             }
 
@@ -93,9 +93,8 @@ class CrudGeneratorCommand extends Command
         }
 
 
-
         foreach ($tocreate as $c) {
-            $generator = new \CrudGenerator\CrudGeneratorService();
+            $generator = new CrudGeneratorService();
             $generator->output = $this;
 
             $generator->appNamespace = Container::getInstance()->getNamespace();
@@ -108,13 +107,14 @@ class CrudGeneratorCommand extends Command
             $generator->layout = $this->option('master-layout');
             $generator->controllerName = ucfirst(strtolower($custom_controller)) ?: ucfirst(Str::camel(Str::singular($generator->modelName)));
 
-            $generator->gridColumns = $grid_columns ? explode(':',$grid_columns) : [];
+            $generator->gridColumns = $grid_columns ? explode(':', $grid_columns) : [];
             $generator->Generate();
         }
 
     }
 
-    function make_display_name( $name ) {
+    function make_display_name($name)
+    {
         return (ucwords(str_replace('_', ' ', str_singular($name))));
     }
 
