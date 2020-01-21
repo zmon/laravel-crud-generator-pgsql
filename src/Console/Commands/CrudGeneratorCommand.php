@@ -17,7 +17,7 @@ class CrudGeneratorCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'make:crud {model-name} {--force} {--singular} {--table-name=} {--display-name=} {--grid-columns=} {--master-layout=} {--custom-controller=}';
+    protected $signature = 'make:crud {model-name} {--force} {--singular} {--table-name=} {--display-name=} {--grid-columns=} {--master-layout=} {--custom-controller=} {--skip-append}';
 
     /**
      * The console command description.
@@ -104,6 +104,7 @@ class CrudGeneratorCommand extends Command
 
             $generator->prefix = $prefix;
             $generator->force = $this->option('force');
+            $generator->skip_append = $this->option('skip-append');
             $generator->layout = $this->option('master-layout');
             $generator->controllerName = ucfirst(strtolower($custom_controller)) ?: ucfirst(Str::camel(Str::singular($generator->modelName)));
 

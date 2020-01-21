@@ -17,6 +17,7 @@ class CrudGeneratorService
     public $displayName = '';
     public $prefix = '';
     public $force = false;
+    public $skip_append = false;
     public $layout = '';
     public $existingModel = '';
     public $controllerName = '';
@@ -44,13 +45,14 @@ class CrudGeneratorService
         $this->viewFolderName = str_replace('_', '-', $model_singular);
 
         $this->output->info('');
-        $this->output->info('Creating catalogue for table: ' . $this->tableName);
-        $this->output->info('Model Name:     ' . $modelname);
-        $this->output->info('Controler Name: ' . $this->controllerName);
+        $this->output->info('Creating CRUD for table: ' . $this->tableName);
+//    Verbose     $this->output->info('Model Name:     ' . $modelname);
+//    Verbose    $this->output->info('Controler Name: ' . $this->controllerName);
 
 
         $options = [
             'force' => $this->force,
+            'skip_append' => $this->skip_append,
             'display_name_singular' => $this->displayName,
             'display_name_plural' => Str::plural($this->displayName),
             'model_uc' => $modelname,
@@ -70,13 +72,26 @@ class CrudGeneratorService
 
         $columns = $this->createModel($modelname, $this->prefix, $this->tableName);
 
+        $edit_columns = [];
+
+        foreach ($columns AS $col) {
+            switch ($col['name']) {
+                case 'id':
+                case 'organization_id':
+                    break;
+                default:
+                    $edit_columns[] = $col;
+            }
+        }
+
         $options['columns'] = $columns;
+        $options['edit_columns'] = $edit_columns;
         $options['grid_columns'] = count($this->gridColumns) ? $this->makeGridColumns($columns) : $columns;
         $options['number_of_grid_columns'] = count($options['grid_columns']) + 1;
         $options['first_column_nonid'] = count($columns) > 1 ? $columns[1]['name'] : '';
         $options['num_columns'] = count($columns);
 
-        dump($options);
+        // dump($options);
 
         //###############################################################################
         if (!is_dir(base_path() . '/resources/views/' . $this->viewFolderName)) {
@@ -87,6 +102,12 @@ class CrudGeneratorService
         $filegenerator = new CrudGeneratorFileCreator();
         $filegenerator->options = $options;
         $filegenerator->output = $this->output;
+
+
+        $filegenerator->templateName = 'CRUD-Doc';
+        $filegenerator->path = base_path() . '/Doc/CRUD/' . $this->controllerName . '.md';
+        $filegenerator->Generate();
+
 
         $filegenerator->templateName = 'controller';
         $filegenerator->path = app_path() . '/Http/Controllers/' . $this->controllerName . 'Controller.php';
@@ -110,6 +131,14 @@ class CrudGeneratorService
 
         $filegenerator->templateName = 'model';
         $filegenerator->path = app_path() . '/' . $modelname . '.php';
+        $filegenerator->Generate();
+
+        $filegenerator->templateName = 'Observer';
+        $filegenerator->path = app_path() . '/Observers/' . $modelname . 'Observer.php';
+        $filegenerator->Generate();
+
+        $filegenerator->templateName = 'ImportTable';
+        $filegenerator->path = app_path() . '/Lib/Import/Import' . $modelname . '.php';
         $filegenerator->Generate();
 
         $filegenerator->templateName = 'view.create';
@@ -142,18 +171,18 @@ class CrudGeneratorService
         $filegenerator->templateName = 'Grid.vue';
         $filegenerator->path = $vue_subdir . '/' . $modelname . 'Grid.vue';
         $filegenerator->Generate();
-        exec("prettier --write " . $vue_subdir . '/' . $modelname . 'Grid.vue');
+//        exec("prettier --write " . $vue_subdir . '/' . $modelname . 'Grid.vue');
 
         $filegenerator->templateName = 'Form.vue';
         $filegenerator->path = $vue_subdir . '/' . $modelname . 'Form.vue';
         $filegenerator->Generate();
-        exec("prettier --write " . $vue_subdir . '/' . $modelname . 'Form.vue');
+//        exec("prettier --write " . $vue_subdir . '/' . $modelname . 'Form.vue');
 
 
         $filegenerator->templateName = 'Show.vue';
         $filegenerator->path = $vue_subdir . '/' . $modelname . 'Show.vue';
         $filegenerator->Generate();
-        exec("prettier --write " . $vue_subdir . '/' . $modelname . 'Show.vue');
+//        exec("prettier --write " . $vue_subdir . '/' . $modelname . 'Show.vue');
 
         $filegenerator->templateName = 'ControllerTest';
         $filegenerator->path = base_path() . '/tests/Feature/' . $modelname . 'ControllerTest.php';
@@ -162,8 +191,42 @@ class CrudGeneratorService
 
         //###############################################################################
 
+        if (!$this->skip_append) {
 
-        // ### VUE JS ###
+            // ### IMPORT FROM PRODUCTION
+
+            $addimport = "//        \$$modelname = new \\App\\Lib\\Import\\Import$modelname();";
+            $this->appendToEndOfFile(base_path() . '/app/Console/Commands/ImportProduction.php', "\n\n" . $addimport, 0, true);
+
+            $addimport = "//        \$" . $modelname . "->import('proddb', '" . $this->tableName . "');";
+            $this->appendToEndOfFile(base_path() . '/app/Console/Commands/ImportProduction.php', "\n" . $addimport, 0, true);
+
+
+            // ### Premissions
+
+            $permission = "//        Permission::findOrCreate('" . $this->viewFolderName . " index');";
+            $this->appendToEndOfFile(base_path() . '/app/Lib/InitialPermissions.php', "\n\n" . $permission, 0, true);
+
+            $permission = "//        Permission::findOrCreate('" . $this->viewFolderName  . " view');";
+            $this->appendToEndOfFile(base_path() . '/app/Lib/InitialPermissions.php', "\n" . $permission, 0, true);
+
+            $permission = "//        Permission::findOrCreate('" . $this->viewFolderName  . " export-pdf');";
+            $this->appendToEndOfFile(base_path() . '/app/Lib/InitialPermissions.php', "\n" . $permission, 0, true);
+
+            $permission = "//        Permission::findOrCreate('" . $this->viewFolderName  . " export-excel');";
+            $this->appendToEndOfFile(base_path() . '/app/Lib/InitialPermissions.php', "\n" . $permission, 0, true);
+
+            $permission = "//        Permission::findOrCreate('" . $this->viewFolderName  . " add');";
+            $this->appendToEndOfFile(base_path() . '/app/Lib/InitialPermissions.php', "\n" . $permission, 0, true);
+
+            $permission = "//        Permission::findOrCreate('" . $this->viewFolderName  . " edit');";
+            $this->appendToEndOfFile(base_path() . '/app/Lib/InitialPermissions.php', "\n" . $permission, 0, true);
+
+            $permission = "//        Permission::findOrCreate('" . $this->viewFolderName  . " delete');";
+            $this->appendToEndOfFile(base_path() . '/app/Lib/InitialPermissions.php', "\n" . $permission, 0, true);
+
+
+            // ### VUE JS ###
 
 //        $addvue = "//Vue.component('" . $this->viewFolderName . "-grid',       require('./components/" . $modelname . "Grid.vue'));    // May need to add .default);";
 //        $this->appendToEndOfFile(base_path().'/resources/js/components.js', "\n".$addvue, 0, true);
@@ -171,42 +234,63 @@ class CrudGeneratorService
 //        $addvue = "//Vue.component('" . $this->viewFolderName . "-form',       require('./components/" . $modelname . "Form.vue'));    // May need to add .default);";
 //        $this->appendToEndOfFile(base_path().'/resources/js/components.js', "\n".$addvue, 0, true);
 
-        $addvue = "Vue.component('" . $this->viewFolderName . "-grid', () => import(/* webpackChunkName:\"" . $this->viewFolderName . "-grid\" */ './components/" . $this->tableName . '/' . $modelname . "Grid.vue'));";
-        $this->appendToEndOfFile(base_path() . '/resources/js/components.js', "\n" . $addvue, 0, true);
+            $addvue = "// Vue.component('" . $this->viewFolderName . "-grid', () => import(/* webpackChunkName:\"" . $this->viewFolderName . "-grid\" */ './components/" . $this->tableName . '/' . $modelname . "Grid.vue'));";
+            $this->appendToEndOfFile(base_path() . '/resources/js/components.js', "\n\n" . $addvue, 0, true);
 
-        $addvue = "Vue.component('" . $this->viewFolderName . "-form', () => import(/* webpackChunkName:\"" . $this->viewFolderName . "-form\" */ './components/" . $this->tableName . '/' . $modelname . "Form.vue'));";
-        $this->appendToEndOfFile(base_path() . '/resources/js/components.js', "\n" . $addvue, 0, true);
+            $addvue = "// Vue.component('" . $this->viewFolderName . "-form', () => import(/* webpackChunkName:\"" . $this->viewFolderName . "-form\" */ './components/" . $this->tableName . '/' . $modelname . "Form.vue'));";
+            $this->appendToEndOfFile(base_path() . '/resources/js/components.js', "\n" . $addvue, 0, true);
 
-        $addvue = "Vue.component('" . $this->viewFolderName . "-show', () => import(/* webpackChunkName:\"" . $this->viewFolderName . "-Show\" */ './components/" . $this->tableName . '/' . $modelname . "Show.vue'));";
-        $this->appendToEndOfFile(base_path() . '/resources/js/components.js', "\n" . $addvue, 0, true);
-
-
-        $this->output->info('Adding Vue: ' . $addvue);
-
-        # $model_singular
+            $addvue = "// Vue.component('" . $this->viewFolderName . "-show', () => import(/* webpackChunkName:\"" . $this->viewFolderName . "-Show\" */ './components/" . $this->tableName . '/' . $modelname . "Show.vue'));";
+            $this->appendToEndOfFile(base_path() . '/resources/js/components.js', "\n" . $addvue, 0, true);
 
 
-        // ### ROUTES ###
+            $this->output->info('Adding Vue: ' . $addvue);
 
-        $addroute = 'Route::get(\'/api-' . $this->viewFolderName . '\', \'' . $this->controllerName . 'Api@index\');';
-        $this->appendToEndOfFile(base_path() . '/routes/web.php', "\n" . $addroute, 0, true);
-        $this->output->info('Adding Route: ' . $addroute);
+            # $model_singular
 
-        $addroute = 'Route::get(\'/api-' . $this->viewFolderName . '/options\', \'' . $this->controllerName . 'Api@getOptions\');';
-        $this->appendToEndOfFile(base_path() . '/routes/web.php', "\n" . $addroute, 0, true);
-        $this->output->info('Adding Route: ' . $addroute);
 
-        $addroute = 'Route::get(\'/' . $this->viewFolderName . '/download\', \'' . $this->controllerName . 'Controller@download\')->name(\'' . $this->viewFolderName . '.download\');';
-        $this->appendToEndOfFile(base_path() . '/routes/web.php', "\n" . $addroute, 0, true);
-        $this->output->info('Adding Route: ' . $addroute);
+            // ### ROUTES ###
 
-        $addroute = 'Route::get(\'/' . $this->viewFolderName . '/print\', \'' . $this->controllerName . 'Controller@print\')->name(\'' . $this->viewFolderName . '.print\');';
-        $this->appendToEndOfFile(base_path() . '/routes/web.php', "\n" . $addroute, 0, true);
-        $this->output->info('Adding Route: ' . $addroute);
+            $addroute = '// Route::get(\'/api-' . $this->viewFolderName . '\', \'' . $this->controllerName . 'Api@index\');';
+            $this->appendToEndOfFile(base_path() . '/routes/web.php', "\n" . $addroute, 0, true);
+            $this->output->info('Adding Route: ' . $addroute);
 
-        $addroute = 'Route::resource(\'/' . $this->viewFolderName . '\', \'' . $this->controllerName . 'Controller\');';
-        $this->appendToEndOfFile(base_path() . '/routes/web.php', "\n" . $addroute, 0, true);
-        $this->output->info('Adding Route: ' . $addroute);
+            $addroute = '// Route::get(\'/api-' . $this->viewFolderName . '/options\', \'' . $this->controllerName . 'Api@getOptions\');';
+            $this->appendToEndOfFile(base_path() . '/routes/web.php', "\n" . $addroute, 0, true);
+            $this->output->info('Adding Route: ' . $addroute);
+
+            $addroute = '// Route::get(\'/' . $this->viewFolderName . '/download\', \'' . $this->controllerName . 'Controller@download\')->name(\'' . $this->viewFolderName . '.download\');';
+            $this->appendToEndOfFile(base_path() . '/routes/web.php', "\n" . $addroute, 0, true);
+            $this->output->info('Adding Route: ' . $addroute);
+
+            $addroute = '// Route::get(\'/' . $this->viewFolderName . '/print\', \'' . $this->controllerName . 'Controller@print\')->name(\'' . $this->viewFolderName . '.print\');';
+            $this->appendToEndOfFile(base_path() . '/routes/web.php', "\n" . $addroute, 0, true);
+            $this->output->info('Adding Route: ' . $addroute);
+
+            $addroute = '// Route::resource(\'/' . $this->viewFolderName . '\', \'' . $this->controllerName . 'Controller\');';
+            $this->appendToEndOfFile(base_path() . '/routes/web.php', "\n" . $addroute, 0, true);
+            $this->output->info('Adding Route: ' . $addroute);
+
+
+
+            # clean code
+
+            $text = "prettier --write resources/js/components/" . $this->tableName. "/${modelname}Grid.vue";
+            $this->appendToEndOfFile(base_path() . '/bin/clean-code.sh', "\n\n" . $text, 0, true);
+            $this->output->info('Adding CleanCode: ' . $text);
+
+
+            $text = "prettier --write resources/js/components/" . $this->tableName. "/${modelname}Form.vue";
+            $this->appendToEndOfFile(base_path() . '/bin/clean-code.sh', "\n" . $text, 0, true);
+            $this->output->info('Adding CleanCode: ' . $text);
+
+
+            $text = "prettier --write resources/js/components/" . $this->tableName. "/${modelname}Show.vue";
+            $this->appendToEndOfFile(base_path() . '/bin/clean-code.sh', "\n" . $text, 0, true);
+            $this->output->info('Adding CleanCode: ' . $text);
+
+
+        }
 
     }
 
@@ -352,7 +436,7 @@ class CrudGeneratorService
 //            $this->appendToEndOfFile(app_path().'/'.$modelname.'.php', "    public \$timestamps = false;\n\n}", 2, true);
 //        }
 
-        $this->output->info('Model created, columns: ' . json_encode($columns));
+ // Verbose       $this->output->info('Model created, columns: ' . json_encode($columns));
         return $columns;
     }
 
