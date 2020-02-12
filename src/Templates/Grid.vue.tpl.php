@@ -10,20 +10,21 @@
         <div class="grid-top row mb-0 align-items-center">
             <div class="col-lg-8 mb-2">
                 <form class="form-inline mb-0">
-                    <a v-if="params.CanAdd" href="#" @click.default="goToNew" class="btn btn-primary mb-3 mb-sm-2 mr-3">Add [[model_singular]]</a>
+                    <a v-if="params.CanAdd" href="#" @click.default="goToNew" class="btn btn-primary mb-3 mb-sm-2 mr-3">Add
+                        [[display_name_singular]]</a>
                     <search-form-group
-                            class="mb-0"
-                            :errors="form_errors.keyword"
-                            label="Name"
-                            labelFor="keyword">
+                        class="mb-0"
+                        :errors="form_errors.keyword"
+                        label="Name"
+                        labelFor="keyword">
                         <input
-                                name="keyword"
-                                id="field_keyword"
-                                v-model="query"
-                                @keyup="getData(1)"
-                                class="form-control mb-2"
-                                type="text"
-                                placeholder="Filter by name">
+                            name="keyword"
+                            id="field_keyword"
+                            v-model="query"
+                            @keyup="getData(1)"
+                            class="form-control mb-2"
+                            type="text"
+                            placeholder="Filter by name">
                     </search-form-group>
                 </form>
             </div>
@@ -39,10 +40,11 @@
                 <tr>
                     [[foreach:grid_columns]]
                     <ss-grid-column-header
-                            v-on:selectedSort="sortColumn"
-                            v-bind:selectedKey="sortKey"
-                            title="Sort by [[i.display]]"
-                            :params="{
+                        v-on:selectedSort="sortColumn"
+                        v-bind:selectedKey="sortKey"
+                        v-bind:selectedOrder="sortOrder"
+                        title="Sort by [[i.display]]"
+                        :params="{
                             sortField: '[[i.name]]',
                             InitialSortOrder: 'asc',
                         }">
@@ -109,8 +111,8 @@
         <!-- Grid Actions Bottom -->
         <div class="grid-bottom row mb-0 align-items-center">
             <div class="col-lg-4 mb-2">
-                <a href="/[[view_folder]]/download" class="btn btn-primary mb-2 mr-2">Export to Excel</a>
-                <a href="/[[view_folder]]/print" class="btn btn-primary mb-2 mr-2">Print PDF</a>
+                <a v-if="(params.CanExcel)" href="/[[view_folder]]/download" class="btn btn-primary mb-2 mr-2">Export to Excel</a>
+                <a v-if="(params.CanPdf)" href="/[[view_folder]]/print" class="btn btn-primary mb-2 mr-2">Print PDF</a>
             </div>
             <ss-grid-pagination class="col-lg-4 mb-2"
                                 v-bind:current_page="current_page"
@@ -217,29 +219,29 @@
                             }
                             this.gridState = 'good';
                         }).catch(error => {
-                            if (error.response) {
-                                this.gridState = 'error';
-                                if (error.response.status === 422) {
-                                    // Clear errors out
-                                    Object.keys(this.form_errors).forEach(i => this.form_errors[i] = false);
-                                    // Set current errors
-                                    Object.keys(error.response.data.errors).forEach(i => this.form_errors[i] = error.response.data.errors[i]);
-                                } else if (error.response.status === 404) {  // Record not found
-                                    this.server_message = 'Record not found';
-                                    window.location = '/[[route_path]]';
-                                } else if (error.response.status === 419) {  // Unknown status
-                                    this.server_message = 'Unknown Status, please try to ';
-                                    this.try_logging_in = true;
-                                } else if (error.response.status === 500) {  // Unknown status
-                                    this.server_message = 'Server Error, please try to ';
-                                    this.try_logging_in = true;
-                                } else {
-                                    this.server_message = error.response.data.message;
-                                }
+                        if (error.response) {
+                            this.gridState = 'error';
+                            if (error.response.status === 422) {
+                                // Clear errors out
+                                Object.keys(this.form_errors).forEach(i => this.form_errors[i] = false);
+                                // Set current errors
+                                Object.keys(error.response.data.errors).forEach(i => this.form_errors[i] = error.response.data.errors[i]);
+                            } else if (error.response.status === 404) {  // Record not found
+                                this.server_message = 'Record not found';
+                                window.location = '/[[route_path]]';
+                            } else if (error.response.status === 419) {  // Unknown status
+                                this.server_message = 'Unknown Status, please try to ';
+                                this.try_logging_in = true;
+                            } else if (error.response.status === 500) {  // Unknown status
+                                this.server_message = 'Server Error, please try to ';
+                                this.try_logging_in = true;
                             } else {
-                                console.log(error.response);
-                                this.server_message = error;
+                                this.server_message = error.response.data.message;
                             }
+                        } else {
+                            console.log(error.response);
+                            this.server_message = error;
+                        }
                     });
                 }
             },

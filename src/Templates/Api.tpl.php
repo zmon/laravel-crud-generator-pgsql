@@ -44,9 +44,9 @@ class [[model_uc]]Api extends Controller
      * Returns "options" for HTML select
      * @return array
      */
-    public function getOptions() {
-
-        return [[model_uc]]::getOptions();
+    public function getOptions()
+    {
+        return [[model_uc]]::getOptions(false, session('organization_id', 0));
     }
 
     /**
@@ -63,7 +63,7 @@ class [[model_uc]]Api extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
@@ -75,7 +75,7 @@ class [[model_uc]]Api extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
@@ -86,7 +86,7 @@ class [[model_uc]]Api extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)

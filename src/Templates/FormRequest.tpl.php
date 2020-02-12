@@ -15,7 +15,7 @@ class [[model_uc]]FormRequest extends FormRequest
     public function authorize()
     {
         if ($this->route('[[model_singular]]')) {  // If ID we must be changing an existing record
-            return Auth::user()->can('[[model_singular]] update');
+            return Auth::user()->can('[[model_singular]] edit');
         } else {  // If not we must be adding one
             return Auth::user()->can('[[model_singular]] add');
         }
@@ -33,12 +33,12 @@ class [[model_uc]]FormRequest extends FormRequest
         $id = $this->route('[[model_singular]]');
 
         $rules = [
-         //  Ignore duplicate email if it is this record
-         //   'email' => 'required|string|email|unique:invites,email,' . $id . '|unique:users|max:191',
+            //  Ignore duplicate email if it is this record
+            //   'email' => 'required|string|email|unique:invites,email,' . $id . '|unique:users|max:191',
 
 
-[[foreach:columns]]
-[[if:i.name!='name']]
+            [[foreach:columns]]
+[[if:i . name != 'name']]
             '[[i.name]]' => '[[i.validation]]',
 [[endif]]
 [[endforeach]]
@@ -46,11 +46,13 @@ class [[model_uc]]FormRequest extends FormRequest
         ];
 
 [[foreach:columns]]
-[[if:i.name=='name']]
+[[if:i.name == 'name']]
+                $organization_id = session('organization_id', 0);
+
                 if ($this->route('[[model_singular]]')) {  // If ID we must be changing an existing record
-                    $rules['name'] = 'required|min:3|[[i.validation]]|unique:[[tablename]],name,' . $id;
+                    $rules['name'] = 'required|string|max:60|unique:[[tablename]],name,' . $id . ',id,organization_id,' . $organization_id;
                 } else {  // If not we must be adding one
-                    $rules['name'] = 'required|min:3|[[i.validation]]|unique:[[tablename]]';
+                    $rules['name'] = 'required|string|max:60|unique:[[tablename]],name,NULL,id,organization_id,' . $organization_id;
                 }
 [[endif]]
 [[endforeach]]

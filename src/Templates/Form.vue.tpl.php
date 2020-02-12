@@ -1,52 +1,68 @@
 <template>
     <form @submit.prevent="handleSubmit" class="form-horizontal">
+        <div class="card">
+            <div class="card-header align-middle">
+                <h1>
+                    <span v-if="form_data.id">
+                        Edit {{record.name}}
+                    </span>
+                    <span v-else>
+                        Add [[model_uc]]
+                    </span>
 
-        <div v-if="server_message !== false" class="alert alert-danger" role="alert">
-            {{ this.server_message}}  <a v-if="try_logging_in" href="/login">Login</a>
-        </div>
-[[foreach:columns]]
+                </h1>
+            </div>
+            <div class="card-body">
 
-        [[if:i.name=='name']]
-            <div class="row">
-                <div class="col-md-12">
-                    <std-form-group label="[[i.display]]" label-for="[[i.name]]" :errors="form_errors.[[i.name]]" :required="true">
-                        <fld-input
+                <div v-if="server_message !== false" class="alert alert-danger" role="alert">
+                    {{ this.server_message}} <a v-if="try_logging_in" href="/login">Login</a>
+                </div>
+                [[foreach:edit_columns]]
+                [[if:i.name=='name']]
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <std-form-group label="[[i.display]]" label-for="[[i.name]]" :errors="form_errors.[[i.name]]"
+                                        :required="true">
+                            <fld-input
                                 name="[[i.name]]"
                                 v-model="form_data.[[i.name]]"
                                 required
-                        />
-                        <template slot="help">
-                            Name must be unique.
-                        </template>
-                    </std-form-group>
+                            />
+                            <template slot="help">
+                                Name must be unique.
+                            </template>
+                        </std-form-group>
+                    </div>
                 </div>
-            </div>
-        [[endif]]
-        [[if:i.name!='name']]
-            <div class="row">
-                <div class="col-md-12">
-                    <std-form-group label="[[i.display]]" label-for="[[i.name]]" :errors="form_errors.[[i.name]]">
-                        <fld-input
+                [[endif]]
+                [[if:i.name!='name']]
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <std-form-group label="[[i.display]]" label-for="[[i.name]]" :errors="form_errors.[[i.name]]">
+                            <fld-input
                                 name="[[i.name]]"
                                 v-model="form_data.[[i.name]]"
-                        />
-                    </std-form-group>
+                            />
+                        </std-form-group>
+                    </div>
                 </div>
+                [[endif]]
+                [[endforeach]]
+
             </div>
-        [[endif]]
-
-[[endforeach]]
-
-        <div class="form-group mt-4">
-            <div class="row">
-                <div class="col-md-6">
-                    <button type="submit" class="btn btn-primary" :disabled="processing">
-                        <span v-if="this.form_data.id">Change [[model_singular]]</span>
-                        <span v-else="this.form_data.id">Add [[model_singular]]</span>
-                    </button>
-                </div>
-                <div class="col-md-6 text-md-right mt-2 mt-md-0">
-                    <a href="/[[route_path]]" class="btn btn-default">Cancel</a>
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary" :disabled="processing">
+                            <span v-if="this.form_data.id">Change [[display_name_singular]]</span>
+                            <span v-else="this.form_data.id">Add [[display_name_singular]]</span>
+                        </button>
+                    </div>
+                    <div class="col-md-6 text-md-right mt-2 mt-md-0">
+                        <a :href="this.cancel_url" class="btn btn-default">Cancel</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -63,6 +79,10 @@
                 type: [Boolean, Object],
                 default: false,
             },
+            cancel_url: {
+                type: [String],
+                default: '/[[model_singular]]',
+            },
             csrf_token: {
                 type: String,
                 default: ''
@@ -76,30 +96,30 @@
 [[foreach:columns]]
   [[if:i.type=='id']]
                     [[i.name]]: 0,
-  [[endif]]
+                [[endif]]
   [[if:i.type=='text']]
                     [[i.name]]: '',
-  [[endif]]
+                [[endif]]
   [[if:i.type=='number]]
                     [[i.name]]: 0,
-  [[endif]]
+                [[endif]]
   [[if:i.type=='date']]
                     [[i.name]]: null,
-  [[endif]]
+                [[endif]]
   [[if:i.type=='unknown']]
                     [[i.name]]: '',
-  [[endif]]
-[[endforeach]]
-                },
+                [[endif]]
+                    [[endforeach]]
+        },
                 form_errors: {
 [[foreach:columns]]
                 [[i.name]]: false,
-[[endforeach]]
+                    [[endforeach]]
                 },
                 server_message: false,
                 try_logging_in: false,
                 processing: false,
-            }
+        }
         },
         mounted() {
             if (this.record !== false) {
@@ -148,13 +168,13 @@
                                 Object.keys(error.response.data.errors).forEach(
                                     i => (this.$set(this.form_errors, i, error.response.data.errors[i]))
                                 );
-                            } else  if (error.response.status === 404) {  // Record not found
+                            } else if (error.response.status === 404) {  // Record not found
                                 this.server_message = 'Record not found';
                                 window.location = '/[[route_path]]';
-                            } else  if (error.response.status === 419) {  // Unknown status
+                            } else if (error.response.status === 419) {  // Unknown status
                                 this.server_message = 'Unknown Status, please try to ';
                                 this.try_logging_in = true;
-                            } else  if (error.response.status === 500) {  // Unknown status
+                            } else if (error.response.status === 500) {  // Unknown status
                                 this.server_message = 'Server Error, please try to ';
                                 this.try_logging_in = true;
                             } else {

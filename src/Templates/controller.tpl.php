@@ -21,50 +21,6 @@ use Maatwebsite\Excel\Facades\Excel;
 class [[model_uc]]Controller extends Controller
 {
 
-    /**
-     * Examples
-     *
-     * Vue component example.
-     *
-        <ui-select-pick-one
-            url="/api-[[view_folder]]/options"
-            v-model="[[model_singular]]Selected"
-            :selected_id=[[model_singular]]Selected"
-            name="[[model_singular]]">
-        </ui-select-pick-one>
-     *
-     *
-     * Blade component example.
-     *
-     *   In Controler
-     *
-             $[[model_singular]]_options = \App\[[model_uc]]::getOptions();
-
-
-     *
-     *   In View
-
-            @component('../components/select-pick-one', [
-                'fld' => '[[model_singular]]_id',
-                'selected_id' => $RECORD->[[model_singular]]_id,
-                'first_option' => 'Select a [[model_uc_plural]]',
-                'options' => $[[model_singular]]_options
-            ])
-            @endcomponent
-     *
-     * Permissions
-     *
-
-             Permission::findOrCreate('[[model_singular]] index');
-             Permission::findOrCreate('[[model_singular]] view');
-             Permission::findOrCreate('[[model_singular]] export-pdf');
-             Permission::findOrCreate('[[model_singular]] export-excel');
-             Permission::findOrCreate('[[model_singular]] add');
-             Permission::findOrCreate('[[model_singular]] edit');
-             Permission::findOrCreate('[[model_singular]] delete');
-
-    */
-
 
     /**
      * Display a listing of the resource.
@@ -82,15 +38,15 @@ class [[model_uc]]Controller extends Controller
         // Remember the search parameters, we saved them in the Query
         $page = session('[[model_singular]]_page', '');
         $search = session('[[model_singular]]_keyword', '');
-        $column = session('[[model_singular]]_column', 'Name');
+        $column = session('[[model_singular]]_column', 'name');
         $direction = session('[[model_singular]]_direction', '-1');
 
         $can_add = Auth::user()->can('[[model_singular]] add');
         $can_show = Auth::user()->can('[[model_singular]] view');
         $can_edit = Auth::user()->can('[[model_singular]] edit');
         $can_delete = Auth::user()->can('[[model_singular]] delete');
-        $can_excel = Auth::user()->can('[[model_singular]] excel');
-        $can_pdf = Auth::user()->can('[[model_singular]] pdf');
+        $can_excel = Auth::user()->can('[[model_singular]] export-excel');
+        $can_pdf = Auth::user()->can('[[model_singular]] export-pdf');
 
         return view('[[view_folder]].index', compact('page', 'column', 'direction', 'search', 'can_add', 'can_edit', 'can_delete', 'can_show', 'can_excel', 'can_pdf'));
 
@@ -102,7 +58,7 @@ class [[model_uc]]Controller extends Controller
      * @return \Illuminate\Http\Response
      */
 	public function create()
-	{
+    {
 
         if (!Auth::user()->can('[[model_singular]] add')) {  // TODO: add -> create
             \Session::flash('flash_error_message', 'You do not have access to add a [[display_name_singular]].');
@@ -113,8 +69,9 @@ class [[model_uc]]Controller extends Controller
             }
         }
 
-	    return view('[[view_folder]].create');
-	}
+        $cancel_url = Redirect::back()->getTargetUrl();
+        return view('[[view_folder]].create', compact('cancel_url'));
+    }
 
 
     /**
@@ -129,8 +86,12 @@ class [[model_uc]]Controller extends Controller
         $[[model_singular]] = new \App\[[model_uc]];
 
         try {
-            $[[model_singular]]->add($request->validated());
+            $attributes = $request->validated();
+            $attributes['organization_id'] = session('organization_id', 0);
+            unset($attributes['id']);
+            $[[model_singular]]->add($attributes);
         } catch (\Exception $e) {
+            info(__METHOD__ . ' ' . $e->getMessage());
             return response()->json([
                 'message' => 'Unable to process request'
             ], 400);
@@ -147,7 +108,7 @@ class [[model_uc]]Controller extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  integer $id
+     * @param integer $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
@@ -165,7 +126,7 @@ class [[model_uc]]Controller extends Controller
         if ($[[model_singular]] = $this->sanitizeAndFind($id)) {
             $can_edit = Auth::user()->can('[[model_singular]] edit');
             $can_delete = (Auth::user()->can('[[model_singular]] delete') && $[[model_singular]]->canDelete());
-            return view('[[view_folder]].show', compact('[[model_singular]]','can_edit', 'can_delete'));
+            return view('[[view_folder]].show', compact('[[model_singular]]', 'can_edit', 'can_delete'));
         } else {
             \Session::flash('flash_error_message', 'Unable to find [[display_name_singular]] to display.');
             return Redirect::route('[[view_folder]].index');
@@ -175,8 +136,8 @@ class [[model_uc]]Controller extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  integer $id
-     * @return \Illuminate\Http\Response
+     * @param integer $id
+     * @return Response
      */
     public function edit($id)
     {
@@ -190,7 +151,8 @@ class [[model_uc]]Controller extends Controller
         }
 
         if ($[[model_singular]] = $this->sanitizeAndFind($id)) {
-            return view('[[view_folder]].edit', compact('[[model_singular]]'));
+            $cancel_url = Redirect::back()->getTargetUrl();
+            return view('[[view_folder]].edit', compact('[[model_singular]]', 'cancel_url'));
         } else {
             \Session::flash('flash_error_message', 'Unable to find [[display_name_singular]] to edit.');
             return Redirect::route('[[view_folder]].index');
@@ -202,7 +164,7 @@ class [[model_uc]]Controller extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request $request
-     * @param  \App\[[model_uc]] $[[model_singular]]
+     * @param \App\[[model_uc]] $[[model_singular]]
      * @return \Illuminate\Http\Response
      */
     public function update([[model_uc]]FormRequest $request, $id)
@@ -218,19 +180,21 @@ class [[model_uc]]Controller extends Controller
 //        }
 
         if (!$[[model_singular]] = $this->sanitizeAndFind($id)) {
-       //     \Session::flash('flash_error_message', 'Unable to find [[display_name_singular]] to edit.');
             return response()->json([
                 'message' => 'Not Found'
             ], 404);
         }
 
-        $[[model_singular]]->fill($request->all());
+        $attributes = $request->all();
+        $attributes['organization_id'] = session('organization_id', 0);
+        $[[model_singular]]->fill($attributes);
 
         if ($[[model_singular]]->isDirty()) {
 
             try {
                 $[[model_singular]]->save();
             } catch (\Exception $e) {
+                info(__METHOD__ . ' ' . $e->getMessage());
                 return response()->json([
                     'message' => 'Unable to process request'
                 ], 400);
@@ -249,7 +213,7 @@ class [[model_uc]]Controller extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\[[model_uc]] $[[model_singular]]
+     * @param \App\[[model_uc]] $[[model_singular]]
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
@@ -258,32 +222,34 @@ class [[model_uc]]Controller extends Controller
         if (!Auth::user()->can('[[model_singular]] delete')) {
             \Session::flash('flash_error_message', 'You do not have access to remove a [[display_name_singular]].');
             if (Auth::user()->can('[[model_singular]] index')) {
-                 return Redirect::route('[[view_folder]].index');
+                return Redirect::route('[[view_folder]].index');
             } else {
                 return Redirect::route('home');
             }
         }
 
-        $[[model_singular]] = $this->sanitizeAndFind($id);
-
-        if ( $[[model_singular]]  && $[[model_singular]]->canDelete()) {
-
-            try {
-                $[[model_singular]]->delete();
-            } catch (\Exception $e) {
-                return response()->json([
-                    'message' => 'Unable to process request.'
-                ], 400);
-            }
-
-            \Session::flash('flash_success_message', '[[display_name_singular]] ' . $[[model_singular]]->name . ' was removed.');
-        } else {
+        if (!$[[model_singular]] = $this->sanitizeAndFind($id)) {
             \Session::flash('flash_error_message', 'Unable to find [[display_name_singular]] to delete.');
+        } else {
 
+            if ($[[model_singular]] && $[[model_singular]]->canDelete()) {
+
+                try {
+                    $[[model_singular]]->delete();
+                } catch (\Exception $e) {
+                    info(__METHOD__ . ' ' . $e->getMessage());
+                    return response()->json([
+                        'message' => 'Unable to process request.'
+                    ], 400);
+                }
+                \Session::flash('flash_success_message', '[[display_name_singular]] ' . $[[model_singular]]->name . ' was removed.');
+            } else {
+                \Session::flash('flash_error_message', 'Unable to find [[display_name_singular]] to delete.');
+            }
         }
 
         if (Auth::user()->can('[[model_singular]] index')) {
-             return Redirect::route('[[view_folder]].index');
+            return Redirect::route('[[view_folder]].index');
         } else {
             return Redirect::route('home');
         }
@@ -299,7 +265,9 @@ class [[model_uc]]Controller extends Controller
      */
     private function sanitizeAndFind($id)
     {
-        return \App\[[model_uc]]::find(intval($id));
+        return \App\[[model_uc]]::where('organization_id',session('organization_id', 0))
+            ->where('id',intval($id))
+            ->first();
     }
 
 
@@ -324,50 +292,46 @@ class [[model_uc]]Controller extends Controller
 
         // #TODO wrap in a try/catch and display english message on failuer.
 
-        info(__METHOD__ . ' line: ' . __LINE__ . " $column, $direction, $search");
-
         $dataQuery = [[model_uc]]::exportDataQuery($column, $direction, $search);
-        //dump($data->toArray());
-        //if ($data->count() > 0) {
+            //dump($data->toArray());
+            //if ($data->count() > 0) {
 
-        // TODO: is it possible to do 0 check before query executes somehow? i think the query would have to be executed twice, once for count, once for excel library
-        return Excel::download(
-            new [[model_uc]]Export($dataQuery),
-            '[[view_folder]].xlsx');
-
+            // TODO: is it possible to do 0 check before query executes somehow? i think the query would have to be executed twice, once for count, once for excel library
+            return Excel::download(
+                new [[model_uc]]Export($dataQuery),
+                '[[view_folder]].xlsx');
     }
 
 
         public function print()
-{
-        if (!Auth::user()->can('[[model_singular]] export-pdf')) { // TODO: i think these permissions may need to be updated to match initial permissions?
-            \Session::flash('flash_error_message', 'You do not have access to print [[display_name_plural]].');
-            if (Auth::user()->can('[[model_singular]] index')) {
-                return Redirect::route('[[view_folder]].index');
-            } else {
-                return Redirect::route('home');
+    {
+            if (!Auth::user()->can('[[model_singular]] export-pdf')) { // TODO: i think these permissions may need to be updated to match initial permissions?
+                \Session::flash('flash_error_message', 'You do not have access to print [[display_name_plural]].');
+                if (Auth::user()->can('[[model_singular]] index')) {
+                    return Redirect::route('[[view_folder]].index');
+                } else {
+                    return Redirect::route('home');
+                }
             }
-        }
 
-        // Remember the search parameters, we saved them in the Query
-        $search = session('[[model_singular]]_keyword', '');
-        $column = session('[[model_singular]]_column', 'name');
-        $direction = session('[[model_singular]]_direction', '-1');
-        $column = $column ? $column : 'name';
+            // Remember the search parameters, we saved them in the Query
+            $search = session('[[model_singular]]_keyword', '');
+            $column = session('[[model_singular]]_column', 'name');
+            $direction = session('[[model_singular]]_direction', '-1');
+            $column = $column ? $column : 'name';
 
-        info(__METHOD__ . ' line: ' . __LINE__ . " $column, $direction, $search");
 
-        // Get query data
-        $columns = [
-[[foreach:grid_columns]]
-            '[[i.name]]',
+            // Get query data
+            $columns = [
+                [[foreach:grid_columns]]
+                '[[i.name]]',
 [[endforeach]]
         ];
         $dataQuery = [[model_uc]]::pdfDataQuery($column, $direction, $search, $columns);
         $data = $dataQuery->get();
 
         // Pass it to the view for html formatting:
-        $printHtml = view('[[view_folder]].print', compact( 'data' ) );
+        $printHtml = view('[[view_folder]].print', compact('data'));
 
         // Begin DOMPDF/laravel-dompdf
         $pdf = \App::make('dompdf.wrapper');

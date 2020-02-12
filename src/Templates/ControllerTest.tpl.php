@@ -8,7 +8,7 @@ use Tests\TestCase;
 use App\[[display_singular]];
 use Faker;
 
-//use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 
@@ -28,17 +28,32 @@ use Spatie\Permission\Exceptions\RoleDoesNotExist;
 class [[model_uc]]ControllerTest extends TestCase
 {
 
-    //use RefreshDatabase;
+    use DatabaseTransactions;
+
+
     //------------------------------------------------------------------------------
     // Test that you must be logged in to access any of the controller functions.
     //------------------------------------------------------------------------------
 
+    protected
+    function setUp(): void
+    {
+        parent::setUp();
+
+        $roles = Role::get()->pluck('name');
+        foreach ($roles as $role) {
+            factory(User::class)->create()->assignRole($role);
+        }
+
+    }
+
     /**
      * @test
      */
-    public function prevent_non_logged_in_users_from_seeing_[[model_singular]]_index()
-    {
-        $response = $this->get('/[[view_folder]]');
+    public
+    function prevent_non_logged_in_users_from_seeing_[[model_singular]]_index()
+{
+$response = $this->get('/[[view_folder]]');
 
         $this->withoutMiddleware();
         $response->assertRedirect('login');
@@ -48,8 +63,8 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_non_logged_in_users_from_creating_[[model_singular]]()
-    {
-        $response = $this->get(route('[[view_folder]].create'));
+{
+$response = $this->get(route('[[view_folder]].create'));
 
         $this->withoutMiddleware();
         $response->assertRedirect('login');
@@ -59,8 +74,8 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_non_logged_in_users_from_storing_[[model_singular]]()
-    {
-        $response = $this->get(route('[[view_folder]].store'));
+{
+$response = $this->get(route('[[view_folder]].store'));
 
         $this->withoutMiddleware();
         $response->assertRedirect('login');
@@ -70,9 +85,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_non_logged_in_users_from_showing_[[model_singular]]()
-    {
-        // Should check for permisson before checking to see if record exists
-        $response = $this->get(route('[[view_folder]].show', ['id' => 1]));
+{
+    // Should check for permisson before checking to see if record exists
+$response = $this->get(route('[[view_folder]].show', ['[[view_folder]]' => 1]));
 
         $this->withoutMiddleware();
         $response->assertRedirect('login');
@@ -82,9 +97,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_non_logged_in_users_from_editing_[[model_singular]]()
-    {
-        // Should check for permisson before checking to see if record exists
-        $response = $this->get(route('[[view_folder]].edit', ['id' => 1]));
+{
+    // Should check for permisson before checking to see if record exists
+$response = $this->get(route('[[view_folder]].edit', ['[[view_folder]]' => 1]));
 
         $this->withoutMiddleware();
         $response->assertRedirect('login');
@@ -95,9 +110,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_non_logged_in_users_from_updateing_[[model_singular]]()
-    {
-        // Should check for permisson before checking to see if record exists
-        $response = $this->put(route('[[view_folder]].update', ['id' => 1]));
+{
+    // Should check for permisson before checking to see if record exists
+$response = $this->put(route('[[view_folder]].update', ['[[view_folder]]' => 1]));
         $this->withoutMiddleware();
         $response->assertRedirect('login');
     }
@@ -107,10 +122,10 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_non_logged_in_users_from_destroying_[[model_singular]]()
-    {
+{
 
-        // Should check for permisson before checking to see if record exists
-        $response = $this->delete(route('[[view_folder]].destroy', ['id' => 1]));
+    // Should check for permisson before checking to see if record exists
+$response = $this->delete(route('[[view_folder]].destroy', ['[[view_folder]]' => 1]));
 
         $this->withoutMiddleware();
         $response->assertRedirect('login');
@@ -125,9 +140,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_without_permissions_from_seeing_[[model_singular]]_index()
-    {
+{
 
-        $user = $this->getRandomUser('cant');
+$user = $this->getRandomUser('cant');
 
         $response = $this->actingAs($user)->get('/[[view_folder]]');
 
@@ -140,9 +155,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_without_permissions_from_creating_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('cant');
+$user = $this->getRandomUser('cant');
 
         $response = $this->actingAs($user)->get(route('[[view_folder]].create'));
 
@@ -154,9 +169,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_without_permissions_from_storing_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('cant');
+$user = $this->getRandomUser('cant');
 
         $response = $this->actingAs($user)->post(route('[[view_folder]].store'));
 
@@ -168,12 +183,12 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_without_permissions_from_showing_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('cant');
+$user = $this->getRandomUser('cant');
 
         // Should check for permisson before checking to see if record exists
-        $response = $this->actingAs($user)->get(route('[[view_folder]].show', ['id' => 1]));
+        $response = $this->actingAs($user)->get(route('[[view_folder]].show', ['[[view_folder]]' => 1]));
 
         $response->assertRedirect('home');
     }
@@ -182,11 +197,11 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_without_permissions_from_editing_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('cant');
+$user = $this->getRandomUser('cant');
 
-        $response = $this->actingAs($user)->get(route('[[view_folder]].edit', ['id' => 1]));
+        $response = $this->actingAs($user)->get(route('[[view_folder]].edit', ['[[view_folder]]' => 1]));
 
         $response->assertRedirect('home');
     }
@@ -196,11 +211,11 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_without_permissions_from_updateing_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('cant');
+$user = $this->getRandomUser('cant');
 
-        $response = $this->actingAs($user)->put(route('[[view_folder]].update', ['id' => 1]));
+        $response = $this->actingAs($user)->put(route('[[view_folder]].update', ['[[view_folder]]' => 1]));
 
         $response->assertStatus(403);  // Form Request::authorized() returns 403 when user is not authorized
 
@@ -211,12 +226,12 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_without_permissions_from_destroying_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('cant');
+$user = $this->getRandomUser('cant');
 
         // Should check for permisson before checking to see if record exists
-        $response = $this->actingAs($user)->delete(route('[[view_folder]].destroy', ['id' => 1]));
+        $response = $this->actingAs($user)->delete(route('[[view_folder]].destroy', ['[[view_folder]]' => 1]));
 
         $response->assertRedirect('home');
     }
@@ -233,13 +248,13 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_withonly_index_permissions_from_creating_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('only index');
+$user = $this->getRandomUser('only index');
 
         $response = $this->actingAs($user)->get(route('[[view_folder]].create'));
 
-        $response->assertRedirect('[[view_folder]]');
+        $response->assertRedirect('home');
     }
 
 
@@ -247,9 +262,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_withonly_index_permissions_from_storing_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('only index');
+$user = $this->getRandomUser('only index');
 
         $response = $this->actingAs($user)->post(route('[[view_folder]].store'));
 
@@ -261,27 +276,27 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_withonly_index_permissions_from_showing_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('only index');
+$user = $this->getRandomUser('only index');
 
         // Should check for permisson before checking to see if record exists
-        $response = $this->actingAs($user)->get(route('[[view_folder]].show', ['id' => 1]));
+        $response = $this->actingAs($user)->get(route('[[view_folder]].show', ['[[view_folder]]' => 1]));
 
-        $response->assertRedirect('[[view_folder]]');
+        $response->assertRedirect('home');
     }
 
     /**
      * @test
      */
     public function prevent_users_withonly_index_permissions_from_editing_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('only index');
+$user = $this->getRandomUser('only index');
 
-        $response = $this->actingAs($user)->get(route('[[view_folder]].edit', ['id' => 1]));
+        $response = $this->actingAs($user)->get(route('[[view_folder]].edit', ['[[view_folder]]' => 1]));
 
-        $response->assertRedirect('[[view_folder]]');
+        $response->assertRedirect('home');
     }
 
 
@@ -289,11 +304,11 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_withonly_index_permissions_from_updating_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('only index');
+$user = $this->getRandomUser('only index');
 
-        $response = $this->actingAs($user)->put(route('[[view_folder]].update', ['id' => 1]));
+        $response = $this->actingAs($user)->put(route('[[view_folder]].update', ['[[view_folder]]' => 1]));
 
         $response->assertStatus(403);  // Form Request::authorized() returns 403 when user is not authorized
 
@@ -304,14 +319,14 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_users_withonly_index_permissions_from_destroying_[[model_singular]]()
-    {
+{
 
-        $user = $this->getRandomUser('only index');
+$user = $this->getRandomUser('only index');
 
         // Should check for permisson before checking to see if record exists
-        $response = $this->actingAs($user)->delete(route('[[view_folder]].destroy', ['id' => 1]));
+        $response = $this->actingAs($user)->delete(route('[[view_folder]].destroy', ['[[view_folder]]' => 1]));
 
-        $response->assertRedirect('[[view_folder]]');
+        $response->assertRedirect('home');
     }
 
     /// ////////
@@ -324,14 +339,14 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_showing_a_nonexistent_[[model_singular]]()
-    {
-        // get a random user
-        $user = $this->getRandomUser('super-admin');
+{
+    // get a random user
+$user = $this->getRandomUser('super-admin');
 
         // act as the user we got and request the create_new_article route
-        $response = $this->actingAs($user)->get(route('[[view_folder]].show',['id' => 100]));
+        $response = $this->actingAs($user)->get(route('[[view_folder]].show', ['[[view_folder]]' => 100000]));
 
-        $response->assertSessionHas('flash_error_message','Unable to find [[display_name_singular]] to display.');
+        $response->assertSessionHas('flash_error_message', 'Unable to find [[display_name_singular]] to display.');
 
     }
 
@@ -339,14 +354,14 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_editing_a_nonexistent_[[model_singular]]()
-    {
-        // get a random user
-        $user = $this->getRandomUser('super-admin');
+{
+    // get a random user
+$user = $this->getRandomUser('super-admin');
 
         // act as the user we got and request the create_new_article route
-        $response = $this->actingAs($user)->get(route('[[view_folder]].edit',['id' => 100]));
+        $response = $this->actingAs($user)->get(route('[[view_folder]].edit', ['[[view_folder]]' => 100000]));
 
-        $response->assertSessionHas('flash_error_message','Unable to find [[display_name_singular]] to edit.');
+        $response->assertSessionHas('flash_error_message', 'Unable to find [[display_name_singular]] to edit.');
 
     }
 
@@ -357,9 +372,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function it_allows_logged_in_users_to_create_new_[[model_singular]]()
-    {
-        // get a random user
-        $user = $this->getRandomUser('super-admin');
+{
+    // get a random user
+$user = $this->getRandomUser('super-admin');
 
         // act as the user we got and request the create_new_article route
         $response = $this->actingAs($user)->get(route('[[view_folder]].create'));
@@ -374,13 +389,12 @@ class [[model_uc]]ControllerTest extends TestCase
      * @test
      */
     public function prevent_creating_a_blank_[[model_singular]]()
-    {
-        // get a random user
-        $user = $this->getRandomUser('super-admin');
+{
+    // get a random user
+$user = $this->getRandomUser('super-admin');
 
         $data = [
-            'id' => "",
-[[foreach:grid_columns]]
+            [[foreach:grid_columns]]
             '[[i.name]]' => "",
 [[endforeach]]
         ];
@@ -393,7 +407,7 @@ class [[model_uc]]ControllerTest extends TestCase
         $this->assertEquals($totalNumberOf[[display_uc_plural]]After, $totalNumberOf[[display_uc_plural]]Before, "the number of total article is supposed to be the same ");
 
         $errors = session('errors');
-        $this->assertEquals($errors->get('name')[0],"The name field is required.");
+        $this->assertEquals($errors->get('name')[0], "The name field is required.");
 
     }
 
@@ -403,13 +417,13 @@ class [[model_uc]]ControllerTest extends TestCase
      * Check validation works
      */
     public function prevent_invalid_data_when_creating_a_[[model_singular]]()
-    {
-        // get a random user
-        $user = $this->getRandomUser('super-admin');
+{
+    // get a random user
+$user = $this->getRandomUser('super-admin');
 
         $data = [
             'id' => "",
-[[foreach:grid_columns]]
+            [[foreach:grid_columns]]
             '[[i.name]]' => "a",
 [[endforeach]]
         ];
@@ -423,7 +437,7 @@ class [[model_uc]]ControllerTest extends TestCase
 
         $errors = session('errors');
 
-        $this->assertEquals($errors->get('name')[0],"The name must be at least 3 characters.");
+        $this->assertEquals($errors->get('name')[0], "The name must be at least 3 characters.");
 
     }
 
@@ -433,26 +447,23 @@ class [[model_uc]]ControllerTest extends TestCase
      * Check validation works
      */
     public function create_a_[[model_singular]]()
-    {
+{
 
-        $faker = Faker\Factory::create();
+$faker = Faker\Factory::create();
         // get a random user
         $user = $this->getRandomUser('super-admin');
 
         $data = [
-[[foreach:grid_columns]]
-[[if:i.name=='name']]
+            [[foreach:grid_columns]]
+[[if:i.name == 'name']]
           'name' => $faker->name,
 [[endif]]
-[[if:i.name!='name']]
+[[if:i.name != 'name']]
           '[[i.name]]' => "",
 [[endif]]
 [[endforeach]]
         ];
 
-        info('--  [[display_singular]]  --');
-         info(print_r($data,true));
-          info('----');
 
         $totalNumberOf[[display_uc_plural]]Before = [[display_singular]]::count();
 
@@ -462,8 +473,6 @@ class [[model_uc]]ControllerTest extends TestCase
 
 
         $errors = session('errors');
-
-        info(print_r($errors,true));
 
         $this->assertEquals($totalNumberOf[[display_uc_plural]]After, $totalNumberOf[[display_uc_plural]]Before + 1, "the number of total [[model_singular]] is supposed to be one more ");
 
@@ -483,9 +492,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * Check validation works
      */
     public function prevent_creating_a_duplicate_[[model_singular]]()
-    {
+{
 
-        $faker = Faker\Factory::create();
+$faker = Faker\Factory::create();
 
         // get a random user
         $user = $this->getRandomUser('super-admin');
@@ -496,11 +505,11 @@ class [[model_uc]]ControllerTest extends TestCase
         $[[model_singular]] = [[display_singular]]::get()->random();
         $data = [
             'id' => "",
-[[foreach:grid_columns]]
-[[if:i.name=='name']]
+            [[foreach:grid_columns]]
+[[if:i.name == 'name']]
             'name' => $[[model_singular]]->name,
 [[endif]]
-[[if:i.name!='name']]
+[[if:i.name != 'name']]
             '[[i.name]]' => "",
 [[endif]]
 [[endforeach]]
@@ -510,7 +519,7 @@ class [[model_uc]]ControllerTest extends TestCase
         $response->assertStatus(302);
 
         $errors = session('errors');
-        $this->assertEquals($errors->get('name')[0],"The name has already been taken.");
+        $this->assertEquals($errors->get('name')[0], "The name has already been taken.");
 
         $totalNumberOf[[display_uc_plural]]After = [[display_singular]]::count();
         $this->assertEquals($totalNumberOf[[display_uc_plural]]After, $totalNumberOf[[display_uc_plural]]Before, "the number of total [[model_singular]] should be the same ");
@@ -523,9 +532,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * Check validation works
      */
     public function allow_changing_[[model_singular]]()
-    {
+{
 
-        $faker = Faker\Factory::create();
+$faker = Faker\Factory::create();
 
         // get a random user
         $user = $this->getRandomUser('super-admin');
@@ -536,7 +545,7 @@ class [[model_uc]]ControllerTest extends TestCase
 
         $totalNumberOf[[display_uc_plural]]Before = [[display_singular]]::count();
 
-        $response = $this->actingAs($user)->json('PATCH', '[[view_folder]]/' . $data['id'], $data);
+        $response = $this->actingAs($user)->json('PUT', '[[view_folder]]/' . $data['id'], $data);
 
         $response->assertStatus(200);
 
@@ -553,9 +562,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * Check validation works on change for catching dups
      */
     public function prevent_creating_a_duplicate_by_changing_[[model_singular]]()
-    {
+{
 
-        $faker = Faker\Factory::create();
+$faker = Faker\Factory::create();
 
         // get a random user
         $user = $this->getRandomUser('super-admin');
@@ -567,11 +576,11 @@ class [[model_uc]]ControllerTest extends TestCase
         // Create one that we can duplicate the name for, at this point we only have one [[model_singular]] record
         $[[model_singular]]_dup = [
 
-[[foreach:grid_columns]]
-[[if:i.name=='name']]
+    [[foreach:grid_columns]]
+[[if:i.name == 'name']]
             'name' => $faker->name,
 [[endif]]
-[[if:i.name!='name']]
+[[if:i.name != 'name']]
             '[[i.name]]' => "",
 [[endif]]
 [[endforeach]]
@@ -588,8 +597,6 @@ class [[model_uc]]ControllerTest extends TestCase
         $response->assertStatus(422);  // From web page we get a 422
 
         $errors = session('errors');
-
-        info(print_r($errors,true));
 
         $response
             ->assertStatus(422)
@@ -610,9 +617,9 @@ class [[model_uc]]ControllerTest extends TestCase
      * Check validation works
      */
     public function allow_deleting_[[model_singular]]()
-    {
+{
 
-        $faker = Faker\Factory::create();
+$faker = Faker\Factory::create();
 
         // get a random user
         $user = $this->getRandomUser('super-admin');
@@ -637,24 +644,26 @@ class [[model_uc]]ControllerTest extends TestCase
      * @return mixed
      */
     public function getRandomUser($role = null, $guard = 'web')
-    {
+{
 
-        if ($role) {
+    if ($role) {
 
-            // This should work but throws a 'Spatie\Permission\Exceptions\RoleDoesNotExist: There is no role named `super-admin`.
-            $role_id = Role::findByName($role,'web')->id;
+        // This should work but throws a 'Spatie\Permission\Exceptions\RoleDoesNotExist: There is no role named `super-admin`.
+        $role_id = Role::findByName($role, 'web')->id;
 
-            $sql = "SELECT model_id FROM model_has_roles WHERE model_type = 'App\\\User' AND role_id = $role_id ORDER BY RAND() LIMIT 1";
-            $ret = DB::select($sql);
-            $user_id = $ret[0]->model_id;
+//            $sql = "SELECT model_id FROM model_has_roles WHERE model_type = 'App\\\User' AND role_id = $role_id ORDER BY RAND() LIMIT 1";
+//            $ret = DB::select($sql);
+//            $user_id = $ret[0]->model_id;
 
-            $this->user = User::find($user_id);
-        } else {
-            $this->user = User::get()->random();
-        }
+        $this->user = User::role($role)->inRandomOrder()->first();
 
-        return $this->user;
+//            $this->user = User::find($user_id);
+    } else {
+        $this->user = User::get()->random();
     }
+
+    return $this->user;
+}
 
 
 }

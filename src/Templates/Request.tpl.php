@@ -33,12 +33,12 @@ class [[model_uc]]Request extends FormRequest
         $id = $this->route('[[model_singular]]');
 
         $rules = [
-         //  Ignore duplicate email if it is this record
-         //   'email' => 'required|string|email|unique:invites,email,' . $id . '|unique:users|max:191',
+            //  Ignore duplicate email if it is this record
+            //   'email' => 'required|string|email|unique:invites,email,' . $id . '|unique:users|max:191',
 
             'id' => 'numeric',
-[[foreach:columns]]
-[[if:i.name!='name']]
+            [[foreach:columns]]
+[[if:i . name != 'name']]
             '[[i.name]]' => '[[i.validation]]',
 [[endif]]
 [[endforeach]]
@@ -46,7 +46,7 @@ class [[model_uc]]Request extends FormRequest
         ];
 
 [[foreach:columns]]
-[[if:i.name=='name']]
+[[if:i . name == 'name']]
                 if ($this->route('[[model_singular]]')) {  // If ID we must be changing an existing record
                     $rules['name'] = '[[i.validation]]|unique:[[tablename]],name,' . $id;
                 } else {  // If not we must be adding one

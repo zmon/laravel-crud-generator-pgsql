@@ -2,21 +2,25 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
+use App\Traits\HistoryTrait;
 use App\Traits\RecordSignature;
+use Illuminate\Database\Eloquent\Model;
+//use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class [[model_uc]] extends Model
 {
 
-    use SoftDeletes;
+//    use SoftDeletes;
     use RecordSignature;
+    use HistoryTrait;
 
     /**
      * fillable - attributes that can be mass-assigned
      */
     protected $fillable = [
-    [[foreach:columns]]
+        [[foreach:columns]]
         '[[i.name]]',
     [[endforeach]]
     ];
@@ -35,12 +39,11 @@ class [[model_uc]] extends Model
 
         try {
             $this->fill($attributes)->save();
-        } catch (\Exception $e) {
+            } catch (\Exception $e) {
+                throw new \Exception($e->getMessage());
+            } catch (\Illuminate\Database\QueryException $e) {
             info(__METHOD__ . ' line: ' . __LINE__ . ':  ' . $e->getMessage());
-            throw new \Exception($e->getMessage());
-        } catch (\Illuminate\Database\QueryException $e) {
-            info(__METHOD__ . ' line: ' . __LINE__ . ':  ' . $e->getMessage());
-            throw new \Exception($e->getMessage());
+                throw new \Exception($e->getMessage());
         }
 
         return true;
@@ -68,8 +71,8 @@ class [[model_uc]] extends Model
         $keyword = '')
     {
         return self::buildBaseGridQuery($column, $direction, $keyword,
-            [ 'id',
-[[foreach:grid_columns]]
+            ['id',
+                [[foreach:grid_columns]]
                     '[[i.name]]',
 [[endforeach]]
             ])
@@ -115,20 +118,23 @@ class [[model_uc]] extends Model
         ->orderBy($column, $direction);
 
         if ($keyword) {
-            $query->where('name', 'like', '%' . $keyword . '%');
+            $query->where('name', 'ilike', '%' . $keyword . '%');
         }
+
+        $query->where('organization_id', session('organization_id', 0));
+
         return $query;
     }
 
-        /**
-         * Get export/Excel/download data query to send to Excel download library
-         *
-         * @param $per_page
-         * @param $column
-         * @param $direction
-         * @param string $keyword
-         * @return mixed
-         */
+    /**
+     * Get export/Excel/download data query to send to Excel download library
+     *
+     * @param $per_page
+     * @param $column
+     * @param $direction
+     * @param string $keyword
+     * @return mixed
+     */
 
     static function exportDataQuery(
         $column,
@@ -137,24 +143,20 @@ class [[model_uc]] extends Model
         $columns = '*')
     {
 
-        info(__METHOD__ . ' line: ' . __LINE__ . " $column, $direction, $keyword");
-
         return self::buildBaseGridQuery($column, $direction, $keyword, $columns);
 
     }
 
-        static function pdfDataQuery(
-            $column,
-            $direction,
-            $keyword = '',
-            $columns = '*')
-        {
+    static function pdfDataQuery(
+        $column,
+        $direction,
+        $keyword = '',
+        $columns = '*')
+    {
 
-            info(__METHOD__ . ' line: ' . __LINE__ . " $column, $direction, $keyword");
+        return self::buildBaseGridQuery($column, $direction, $keyword, $columns);
 
-            return self::buildBaseGridQuery($column, $direction, $keyword, $columns);
-
-        }
+    }
 
 
     /**
@@ -163,13 +165,14 @@ class [[model_uc]] extends Model
      * If flat return an array.
      * Otherwise, return an array of records.  Helps keep in proper order durring ajax calls to Chrome
      */
-    static public function getOptions($flat = false)
+    static public function getOptions($flat = false, $organization_id = 0)
     {
 
         $thisModel = new static;
 
         $records = $thisModel::select('id',
             'name')
+            ->where('organization_id', $organization_id)
             ->orderBy('name')
             ->get();
 
@@ -185,6 +188,47 @@ class [[model_uc]] extends Model
             return $data;
         }
 
+    }
+
+    // ========================================
+    // To support Old Code
+    // ========================================
+
+    /**
+     * getForSelect, returns options (id and name) for a HTML Select as an collection of Eloquent models.
+     *
+     * @param null $organization_id
+     * @return Collection|static[]
+     *
+     *   You can think of the return as nested arrays
+     *   ````
+     *     [0] = ['id' => 23, 'name' => 'Alaska']
+     *     [1] = ['id' => 11, 'name' => 'Tom']
+     *   ````
+     *
+     *   If you want a flat array like
+     *   ````
+     *      [23] = 'Alaska'
+     *      [11] = 'Tom'
+     *   ````
+     *
+     *   convert the result with `->toArray()`
+     *   ````
+     *      $results_as_array = MODEL::getForSelect($organization_id)->toArray()
+     *   ````
+     */
+    static public function getForSelect($organization_id = null)
+    {
+
+        $instance = new static;
+
+        $options = $instance::select('id as id',
+            'name as name')
+            ->orderBy('name')
+            ->where('organization_id', $organization_id)
+            ->get();
+
+        return $options;
     }
 
 }
