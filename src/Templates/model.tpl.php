@@ -5,7 +5,9 @@ namespace App;
 
 use App\Traits\HistoryTrait;
 use App\Traits\RecordSignature;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 //use Illuminate\Database\Eloquent\SoftDeletes;
 
 
@@ -133,6 +135,7 @@ class [[model_uc]] extends Model
      * @param $column
      * @param $direction
      * @param string $keyword
+     * @param array $columns
      * @return mixed
      */
 
@@ -143,10 +146,24 @@ class [[model_uc]] extends Model
         $columns = '*')
     {
 
-        return self::buildBaseGridQuery($column, $direction, $keyword, $columns);
+        return self::buildBaseGridQuery($column, $direction, $keyword, [
+            [[foreach:grid_columns]]
+                    '[[i.name]]',
+[[endforeach]]
+        ]);
 
     }
 
+        /**
+         * Get export/Excel/download data query to send to PDF  library
+         *
+         * @param $per_page
+         * @param $column
+         * @param $direction
+         * @param string $keyword
+         * @param array $columns
+         * @return mixed
+         */
     static function pdfDataQuery(
         $column,
         $direction,
@@ -154,7 +171,11 @@ class [[model_uc]] extends Model
         $columns = '*')
     {
 
-        return self::buildBaseGridQuery($column, $direction, $keyword, $columns);
+        return self::buildBaseGridQuery($column, $direction, $keyword, [
+            [[foreach:grid_columns]]
+                    '[[i.name]]',
+[[endforeach]]
+        ]);
 
     }
 

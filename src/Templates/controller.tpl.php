@@ -274,7 +274,7 @@ class [[model_uc]]Controller extends Controller
     public function download()
     {
 
-        if (!Auth::user()->can('[[model_singular]] excel')) {
+        if (!Auth::user()->can('[[model_singular]] export-excel')) {
             \Session::flash('flash_error_message', 'You do not have access to download [[display_name_plural]].');
             if (Auth::user()->can('[[model_singular]] index')) {
                 return Redirect::route('[[view_folder]].index');
