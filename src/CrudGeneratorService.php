@@ -53,7 +53,7 @@ class CrudGeneratorService
         $options = [
             'force' => $this->force,
             'skip_append' => $this->skip_append,
-            'display_name_singular' => $this->displayName,
+            'display_name_singular' => Str::singular($this->displayName),
             'display_name_plural' => Str::plural($this->displayName),
             'model_uc' => $modelname,
             'model_uc_plural' => Str::plural($modelname),

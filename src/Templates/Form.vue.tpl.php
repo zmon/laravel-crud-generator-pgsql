@@ -7,7 +7,7 @@
                         Edit {{record.name}}
                     </span>
                     <span v-else>
-                        Add [[model_uc]]
+                        Add a [[display_name_singular]]
                     </span>
 
                 </h1>
