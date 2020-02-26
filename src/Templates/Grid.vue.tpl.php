@@ -15,7 +15,7 @@
                     <search-form-group
                         class="mb-0"
                         :errors="form_errors.keyword"
-                        label="Name"
+                        label="Search"
                         labelFor="keyword">
                         <input
                             name="keyword"
