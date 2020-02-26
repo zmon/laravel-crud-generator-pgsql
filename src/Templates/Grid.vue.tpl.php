@@ -149,7 +149,6 @@
         mounted: function () {
 
             this.current_page = (!isNaN(parseInt(this.params.Page))) ? parseInt(this.params.Page) : 1;
-            this.query = this.params.Search;
             this.getData(this.current_page);
         },
 
@@ -157,7 +156,11 @@
 
             return {
                 gridState: 'wait',
+
+                // Filters
                 query: this.params.Search,
+
+                // Grid data and what it is showing
                 gridData: [],
                 current_page: 1,
                 last_page: null,
