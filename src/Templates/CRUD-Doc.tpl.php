@@ -2,7 +2,7 @@
 
 ## After running Crud Generator
 
-Version 1.4.0.3
+Version 1.4.0.4
 
 
 #### Setup Permissions in `app/Lib/InitialPermissons.php`
