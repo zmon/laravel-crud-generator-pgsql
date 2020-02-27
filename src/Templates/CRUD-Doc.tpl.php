@@ -176,7 +176,7 @@ node_modules/.bin/prettier --write resources/js/components/[[tablename]]/" . [[m
 
 
 
-## Vue component example.
+## FORM Vue component example.
 ```
 <std-form-group
     label="[[model_uc]]"
@@ -195,8 +195,25 @@ node_modules/.bin/prettier --write resources/js/components/[[tablename]]/" . [[m
 import UiSelectPickOne from "../SS/UiSelectPickOne";
 
 components: { UiSelectPickOne },
+```
 
+## GRID Vue Component example
 
+```
+<search-form-group
+    class="mb-0"
+    label="[[model_uc]]"
+    label-for="[[model_singular]]_id"
+    :errors="form_errors.[[model_singular]]_id">
+    <ui-select-pick-one
+        url="/api-[[view_folder]]/options"
+        v-model="form_data.[[model_singular]]_id"
+        :selected_id="form_data.[[model_singular]]_id"
+        name="[[model_singular]]_id"
+        :blank_value="0"
+        additional_classes="mb-2 grid-filter">
+    </ui-select-pick-one>
+</search-form-group>
 ```
 ## Blade component example.
 
