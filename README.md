@@ -9,7 +9,7 @@ php artisan command to generate fully working crud with grid paginated server si
 ### Installing
 
 ```
-composer require zmon/laravel-crud-generator-zmon
+composer require zmon/laravel-crud-generator-pgsql
 ```
 
 Add to config/app.php the following line to the 'providers' array:
