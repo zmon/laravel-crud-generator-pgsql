@@ -25,10 +25,19 @@ class [[model_uc]]IndexRequest extends FormRequest
     public function rules()
     {
         return [
-            'page' => 'numeric',
-            'column' => 'nullable|string',
-            'direction' => 'numeric',
-            'keyword' => 'string',
+            'page' => [
+                'numeric',
+            ],
+            'column' => [
+                'nullable',
+                'string',
+            ],
+            'direction' => [
+                'numeric',
+            ],
+            'keyword' => [
+                'string',
+            ],
         ];
     }
 }

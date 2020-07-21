@@ -2,8 +2,8 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
@@ -11,8 +11,7 @@ class [[model_uc]]Export implements FromQuery, WithHeadings, WithMapping
 {
     use Exportable;
 
-    protected
-    $dataQuery = null;
+    protected $dataQuery = null;
 
     public function __construct($dataQuery)
     {

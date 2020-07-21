@@ -3,14 +3,14 @@
 namespace [[appns]]Http\Controllers;
 
 use [[appns]][[model_uc]];
-use Illuminate\Http\Request;
+
 use [[appns]]Http\Controllers\Controller;
 use [[appns]]Http\Requests\[[model_uc]]IndexRequest;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class [[model_uc]]Api extends Controller
 {
-
-
     /**
      * Display a listing of the resource.
      *
@@ -18,7 +18,6 @@ class [[model_uc]]Api extends Controller
      */
     public function index([[model_uc]]IndexRequest $request)
     {
-
         $page = $request->get('page', '1');                // Pagination looks at the request
         //    so not quite sure if we need this
         $column = $request->get('column', 'Name');
@@ -31,7 +30,7 @@ class [[model_uc]]Api extends Controller
             '[[model_singular]]_page' => $page,
             '[[model_singular]]_column' => $column,
             '[[model_singular]]_direction' => $direction,
-            '[[model_singular]]_keyword' => $keyword
+            '[[model_singular]]_keyword' => $keyword,
         ]);
 
         $keyword = $keyword != 'null' ? $keyword : '';
@@ -41,7 +40,7 @@ class [[model_uc]]Api extends Controller
     }
 
     /**
-     * Returns "options" for HTML select
+     * Returns "options" for HTML select.
      * @return array
      */
     public function getOptions()

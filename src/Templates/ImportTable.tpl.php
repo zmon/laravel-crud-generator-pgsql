@@ -1,19 +1,13 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: paulb
- * Date: 2019-12-24
- * Time: 21:18
- */
+
 
 
 namespace App\Lib\Import;
 
 use App\Lib\Import\GetDbColumns;
-
 use App\[[model_uc]];
 
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class Import[[model_uc]]
 {
@@ -32,10 +26,10 @@ class Import[[model_uc]]
     ];
 
 
-    function import($database, $tablename)
+    public function import($database, $tablename)
     {
 
-        print "Importing $tablename\n";
+        echo "Importing $tablename\n";
 
         DB::unprepared('SET session_replication_role = \'replica\';');  // Turns constraint checks off.
 
@@ -59,10 +53,10 @@ class Import[[model_uc]]
 
     }
 
-    function clean($record)
+    private function clean($record)
     {
         $data = [];
-        foreach ($this->fields AS $org_name => $field) {
+        foreach ($this->fields as $org_name => $field) {
             $data[$field['name']] = $record->$org_name;
         }
 

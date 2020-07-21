@@ -2,24 +2,22 @@
 
 namespace App;
 
-
 use App\Traits\HistoryTrait;
 use App\Traits\RecordSignature;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
-//use Illuminate\Database\Eloquent\SoftDeletes;
 
+//use Illuminate\Database\Eloquent\SoftDeletes;
 
 class [[model_uc]] extends Model
 {
-
 //    use SoftDeletes;
     use RecordSignature;
     use HistoryTrait;
 
     /**
-     * fillable - attributes that can be mass-assigned
+     * fillable - attributes that can be mass-assigned.
      */
     protected $fillable = [
         [[foreach:columns]]
@@ -28,37 +26,35 @@ class [[model_uc]] extends Model
     ];
 
     protected $hidden = [
-        'active',
-        'created_by',
-        'modified_by',
-        'purged_by',
-        'created_at',
-        'updated_at',
-    ];
+    'active',
+    'created_by',
+    'modified_by',
+    'purged_by',
+    'created_at',
+    'updated_at',
+];
 
     public function add($attributes)
-    {
-
-        try {
-            $this->fill($attributes)->save();
-            } catch (\Exception $e) {
-                throw new \Exception($e->getMessage());
-            } catch (\Illuminate\Database\QueryException $e) {
-            info(__METHOD__ . ' line: ' . __LINE__ . ':  ' . $e->getMessage());
-                throw new \Exception($e->getMessage());
-        }
-
-        return true;
+{
+    try {
+        $this->fill($attributes)->save();
+    } catch (Exception $e) {
+        throw new Exception($e->getMessage());
+    } catch (QueryException $e) {
+        info(__METHOD__ . ' line: ' . __LINE__ . ':  ' . $e->getMessage());
+        throw new Exception($e->getMessage());
     }
+
+    return true;
+}
 
     public function canDelete()
-    {
-        return true;
-    }
-
+{
+    return true;
+}
 
     /**
-     * Get Grid/index data PAGINATED
+     * Get Grid/index data PAGINATED.
      *
      * @param $per_page
      * @param $column
@@ -66,7 +62,7 @@ class [[model_uc]] extends Model
      * @param string $keyword
      * @return mixed
      */
-    static function indexData(
+    public static function indexData(
         $per_page,
         $column,
         $direction,
@@ -81,11 +77,8 @@ class [[model_uc]] extends Model
         ->paginate($per_page);
     }
 
-
-
-
     /**
-     * Create base query to be used by Grid, Download, and PDF
+     * Create base query to be used by Grid, Download, and PDF.
      *
      * NOTE: to override the select you must supply all fields, ie you cannot add to the
      *       fields being selected.
@@ -96,8 +89,7 @@ class [[model_uc]] extends Model
      * @param string|array $columns
      * @return mixed
      */
-
-    static function buildBaseGridQuery(
+    public static function buildBaseGridQuery(
         $column,
         $direction,
         $keyword = '',
@@ -116,7 +108,7 @@ class [[model_uc]] extends Model
                 break;
         }
 
-        $query = [[model_uc]]::select($columns)
+        $query = self::select($columns)
         ->orderBy($column, $direction);
 
         if ($keyword) {
@@ -129,7 +121,7 @@ class [[model_uc]] extends Model
     }
 
     /**
-     * Get export/Excel/download data query to send to Excel download library
+     * Get export/Excel/download data query to send to Excel download library.
      *
      * @param $per_page
      * @param $column
@@ -138,24 +130,21 @@ class [[model_uc]] extends Model
      * @param array $columns
      * @return mixed
      */
-
-    static function exportDataQuery(
+    public static function exportDataQuery(
         $column,
         $direction,
         $keyword = '',
         $columns = '*')
     {
-
         return self::buildBaseGridQuery($column, $direction, $keyword, [
             [[foreach:grid_columns]]
                     '[[i.name]]',
 [[endforeach]]
         ]);
-
     }
 
         /**
-         * Get export/Excel/download data query to send to PDF  library
+         * Get export/Excel/download data query to send to PDF  library.
          *
          * @param $per_page
          * @param $column
@@ -164,52 +153,47 @@ class [[model_uc]] extends Model
          * @param array $columns
          * @return mixed
          */
-    static function pdfDataQuery(
+    public static function pdfDataQuery(
         $column,
         $direction,
         $keyword = '',
         $columns = '*')
     {
-
         return self::buildBaseGridQuery($column, $direction, $keyword, [
             [[foreach:grid_columns]]
                     '[[i.name]]',
 [[endforeach]]
         ]);
-
     }
 
-
     /**
-     * Get "options" for HTML select tag
+     * Get "options" for HTML select tag.
      *
      * If flat return an array.
      * Otherwise, return an array of records.  Helps keep in proper order durring ajax calls to Chrome
      */
-    static public function getOptions($flat = false, $organization_id = 0)
-    {
+    public static function getOptions($flat = false, $organization_id = 0)
+{
+    $thisModel = new static;
 
-        $thisModel = new static;
+    $records = $thisModel::select('id',
+        'name')
+        ->where('organization_id', $organization_id)
+        ->orderBy('name')
+        ->get();
 
-        $records = $thisModel::select('id',
-            'name')
-            ->where('organization_id', $organization_id)
-            ->orderBy('name')
-            ->get();
+    if (!$flat) {
+        return $records;
+    } else {
+        $data = [];
 
-        if (!$flat) {
-            return $records;
-        } else {
-            $data = [];
-
-            foreach ($records AS $rec) {
-                $data[] = ['id' => $rec['id'], 'name' => $rec['name']];
-            }
-
-            return $data;
+        foreach ($records as $rec) {
+            $data[] = ['id' => $rec['id'], 'name' => $rec['name']];
         }
 
+        return $data;
     }
+}
 
     // ========================================
     // To support Old Code
@@ -238,18 +222,16 @@ class [[model_uc]] extends Model
      *      $results_as_array = MODEL::getForSelect($organization_id)->toArray()
      *   ````
      */
-    static public function getForSelect($organization_id = null)
-    {
+    public static function getForSelect($organization_id = null)
+{
+    $instance = new static;
 
-        $instance = new static;
+    $options = $instance::select('id as id',
+        'name as name')
+        ->orderBy('name')
+        ->where('organization_id', $organization_id)
+        ->get();
 
-        $options = $instance::select('id as id',
-            'name as name')
-            ->orderBy('name')
-            ->where('organization_id', $organization_id)
-            ->get();
-
-        return $options;
-    }
-
+    return $options;
+}
 }
