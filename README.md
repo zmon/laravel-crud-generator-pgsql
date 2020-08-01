@@ -20,7 +20,7 @@ CrudGenerator\CrudGeneratorServiceProvider::class,
 ### Upgrade
 
 ```
-COMPOSER_MEMORY_LIMIT=-1 composer update zmon/crud-generator-pgsql @dev
+COMPOSER_MEMORY_LIMIT=-1 composer update zmon/laravel-crud-generator-pgsql @dev
 ```
 
 ### Usage
